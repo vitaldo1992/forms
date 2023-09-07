@@ -8,26 +8,28 @@
 </div>
 
 <ng-template>
-  <form [formGroup]="localForm" (ngSubmit)="validateForm(localForm)">
+  <form [formGroup]="localForm" (ngSubmit)="submitForm();">
     <h2 mat-dialog-title>{{title}}</h2>
-    <div mat-dialog-content *ngIf="formErrors$ | async as formErrors;">
-      <ng-container *ngFor="let field of translations | toTranslationArray">
-        <mat-form-field *ngIf="localForm.get(field.lang) as control"
-                        [class.mat-form-field-invalid]="!!formErrors[field.lang]">
-          <mat-label>
-            <!-- TODO handle custom flags -->
-            <img class="img" [src]="'/assets/' + field.lang + '.svg'" alt="">{{_appearance[field.lang].label}}
-          </mat-label>
-          <textarea
-            matInput
-            formControlName="{{field.lang}}"
-            cdkTextareaAutosize
-            [cdkAutosizeMaxRows]="5">
+    <div mat-dialog-content>
+      <ng-container *ngIf="localForm.errors | parseErrors as error">
+        <ng-container *ngFor="let field of translations | toTranslationArray">
+          <mat-form-field *ngIf="localForm.get(field.lang) as control"
+                          [class.mat-form-field-invalid]="error.lang === field.lang">
+            <mat-label>
+              <!-- TODO handle custom flags -->
+              <img class="img" [src]="'/assets/' + field.lang + '.svg'" alt="">{{_appearance[field.lang].label}}
+            </mat-label>
+            <textarea
+              matInput
+              formControlName="{{field.lang}}"
+              cdkTextareaAutosize
+              [cdkAutosizeMaxRows]="5">
           </textarea>
-          <mat-hint>{{_appearance[field.lang].hint}}</mat-hint>
-        </mat-form-field>
+            <mat-hint>{{_appearance[field.lang].hint}}</mat-hint>
+          </mat-form-field>
+        </ng-container>
+        <mat-error>{{ error.message }}</mat-error>
       </ng-container>
-      <mat-error>{{ formErrors | extractErrors }}</mat-error>
     </div>
     <div mat-dialog-actions align="end">
       <button mat-raised-button [mat-dialog-close]="true">Close</button>

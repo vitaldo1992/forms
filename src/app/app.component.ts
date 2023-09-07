@@ -17,7 +17,7 @@ export class AppComponent {
   appearance: Appearance = {
     en: {
       label: 'English',
-      hint: `Copy cyrillic letters 'Я и некоторые буквы' to test custom validator`
+      hint: `Copy cyrillic letters 'Некоторые буквы' to test custom validator`
     },
     cz: {
       label: 'Čeština'
@@ -47,6 +47,7 @@ export class AppComponent {
         cz: 'Vítejte v naší komunitě!',
         sk: 'Vitajte v našej komunite!'
       },
+      hasCyrillicValidator(`Translation shouldn't have Cyrillic letters`)
     ),
     introText: new FormControl({
       en: 'This is an intro text placeholder....',
@@ -63,7 +64,7 @@ export class AppComponent {
   constructor(private cdr: ChangeDetectorRef) {
     this.form.valueChanges.subscribe((value) => {
       // TODO unsubscribe and handle view update without cdr
-      console.log(this.form.get('successText'));
+      // console.log(this.form.get('successText'));
       this.cdr.detectChanges();
     })
   }

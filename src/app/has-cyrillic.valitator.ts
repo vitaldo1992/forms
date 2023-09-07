@@ -12,6 +12,6 @@ export function hasCyrillicValidator(message: string): ValidatorFn {
 
     const hasCyrillic = en?.match(/\p{sc=Cyrillic}/u);
 
-    return hasCyrillic ? { hasCyrillic: { message: `EN: ${message}` } } : null;
+    return hasCyrillic ? { en: message} : null;
   }
 }

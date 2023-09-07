@@ -1,7 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  forwardRef,
+  forwardRef, Injector,
   Input,
   OnDestroy,
   TemplateRef,
@@ -14,28 +14,26 @@ import {
   FormControl,
   FormGroup,
   FormsModule, NG_VALIDATORS,
-  NG_VALUE_ACCESSOR,
-  ReactiveFormsModule, ValidationErrors, Validator, Validators
+  NG_VALUE_ACCESSOR, NgControl,
+  ReactiveFormsModule, ValidationErrors, Validator
 } from "@angular/forms";
 
 import {TranslationMap} from "./translation.interface";
 import {ToTranslationsArrayPipe} from "./to-translations-array.pipe";
 import {Appearance} from "./appearance.interface";
-import {map, startWith, Subject, takeUntil} from "rxjs";
-import {ValidatorsDictionary} from "./validators.interface";
-import {ExtractErrorsPipe} from "./extract-errors.pipe";
-import {ErrorsDictionary} from "./errors-dictionary.interface";
+import {Subject, takeUntil} from "rxjs";
 import {TextFieldModule} from "@angular/cdk/text-field";
 import {MatDialog, MatDialogModule, MatDialogRef} from "@angular/material/dialog";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {MatButtonModule} from "@angular/material/button";
 import {MatInputModule} from "@angular/material/input";
 import {MatIconModule} from "@angular/material/icon";
+import {ParseErrorsPipe} from "./parse-errors.pipe";
 
 @Component({
   selector: 'app-translation-field',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule, BrowserAnimationsModule, NgForOf, ToTranslationsArrayPipe, ReactiveFormsModule, ExtractErrorsPipe, TextFieldModule, MatButtonModule, MatInputModule, MatIconModule],
+  imports: [ParseErrorsPipe, CommonModule, FormsModule, MatDialogModule, BrowserAnimationsModule, NgForOf, ToTranslationsArrayPipe, ReactiveFormsModule, TextFieldModule, MatButtonModule, MatInputModule, MatIconModule],
   templateUrl: './translation-field.component.html',
   styleUrls: ['./translation-field.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,7 +45,7 @@ import {MatIconModule} from "@angular/material/icon";
     },
     {
       provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => TranslationFieldComponent),
+      useClass: forwardRef(() => TranslationFieldComponent),
       multi: true
     }]
 })
@@ -62,25 +60,10 @@ export class TranslationFieldComponent implements ControlValueAccessor, Validato
   private _initialValue = {...this.translations};
 
   localForm = new FormGroup({}, {updateOn: 'submit'});
+  control?: NgControl;
 
   private saveChanges$ = new Subject();
   private destroyed$ = new Subject<void>();
-
-  formErrors$ = this.localForm.valueChanges.pipe(
-    startWith(this.localForm.value),
-    map((value) => {
-      const errorsDictionary: ErrorsDictionary = {};
-      if (value) {
-        Object.keys(this.localForm.controls).find(controlName => {
-          const errors = this.localForm.get(controlName)?.errors;
-          if (errors) {
-            errorsDictionary[controlName] = errors;
-          }
-          return !!errors;
-        });
-      }
-      return errorsDictionary;
-    }));
 
   _appearance: Appearance = {
     en: {
@@ -104,25 +87,24 @@ export class TranslationFieldComponent implements ControlValueAccessor, Validato
     };
   }
 
-  @Input() validators: ValidatorsDictionary = {
-    en: [Validators.required],
-    cz: [Validators.required],
-    sk: [Validators.required]
-  }
-
   @ViewChild(TemplateRef) dialogTemplate?: TemplateRef<void>;
   private dialogRef?: MatDialogRef<void>;
 
-  constructor(readonly dialog: MatDialog) {
+  constructor(
+    readonly dialog: MatDialog,
+    private _injector: Injector,
+
+  ) {}
+
+  ngOnInit() {
+    /* temp solution to get control and avoid DI error */
+    this.control = this._injector.get(NgControl);
   }
 
   writeValue(value: TranslationMap) {
     if (value) {
       this._initialValue = value;
-      Object.entries(value).forEach(([lang, value]) => this.localForm.addControl(lang, new FormControl(value,
-          this.validators[lang]
-        ))
-      );
+      Object.entries(value).forEach(([lang, value]) => this.localForm.addControl(lang, new FormControl(value)));
     }
   }
 
@@ -133,9 +115,13 @@ export class TranslationFieldComponent implements ControlValueAccessor, Validato
   registerOnTouched(fn: any): void {
   }
 
-  validateForm(form: FormGroup) {
-    if (form.valid) {
-      this.saveChanges$.next(form.value);
+  submitForm() {
+    if (this.control?.control?.validator) {
+      this.localForm.addValidators(this.control.control.validator);
+      this.localForm.updateValueAndValidity();
+    }
+    if (this.localForm.valid) {
+      this.saveChanges$.next(this.localForm.value);
       this.dialogRef?.close();
     }
   }
@@ -157,9 +143,11 @@ export class TranslationFieldComponent implements ControlValueAccessor, Validato
     if (!value) {
       return null;
     }
-    if (Object.values(value).filter(translation => !translation).length) {
+    const missingTranslation = Object.entries(value).find(([, value]) => !value);
+    if (missingTranslation) {
+      const lang = missingTranslation[0];
       return {
-        missingTranslation: true
+        [lang]: `Missing translation error`
       }
     }
     return null;
