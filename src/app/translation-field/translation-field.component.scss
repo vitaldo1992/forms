@@ -1,0 +1,20 @@
+.field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #d9e6ef;
+  padding: 5px 15px;
+}
+
+.mat-form-field {
+  display: block;
+  margin-bottom: 30px;
+
+  .img {
+    display: inline-block;
+    width: 20px;
+    margin-right: 5px;
+  }
+}
+
+

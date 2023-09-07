@@ -1,0 +1,30 @@
+main {
+  display: flex;
+  justify-content: center;
+}
+
+.form {
+  width: 700px;
+}
+
+.row {
+  margin: 5px 0;
+
+  mat-form-field {
+    box-sizing: border-box;
+    padding: 5px 15px 0;
+    width: 100%;
+    background: #d9e6ef;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: #bbbbbb;
+  }
+}
+
+.form-actions {
+  padding: 15px 0;
+  display: flex;
+  justify-content: flex-end;
+}

@@ -1,0 +1,38 @@
+<div class="field-row">
+  <div class="name">
+    {{name}}
+  </div>
+  <button mat-icon-button (click)="openDialog()">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+</div>
+
+<ng-template>
+  <form [formGroup]="localForm" (ngSubmit)="validateForm(localForm)">
+    <h2 mat-dialog-title>{{title}}</h2>
+    <div mat-dialog-content *ngIf="formErrors$ | async as formErrors;">
+      <ng-container *ngFor="let field of translations | toTranslationArray">
+        <mat-form-field *ngIf="localForm.get(field.lang) as control"
+                        [class.mat-form-field-invalid]="!!formErrors[field.lang]">
+          <mat-label>
+            <!-- TODO handle custom flags -->
+            <img class="img" [src]="'/assets/' + field.lang + '.svg'" alt="">{{_appearance[field.lang].label}}
+          </mat-label>
+          <textarea
+            matInput
+            formControlName="{{field.lang}}"
+            cdkTextareaAutosize
+            [cdkAutosizeMaxRows]="5">
+          </textarea>
+          <mat-hint>{{_appearance[field.lang].hint}}</mat-hint>
+        </mat-form-field>
+      </ng-container>
+      <mat-error>{{ formErrors | extractErrors }}</mat-error>
+    </div>
+    <div mat-dialog-actions align="end">
+      <button mat-raised-button [mat-dialog-close]="true">Close</button>
+      <button mat-raised-button type="submit" [color]="'primary'">Save</button>
+    </div>
+  </form>
+</ng-template>
+
