@@ -45,7 +45,7 @@ import {ParseErrorsPipe} from "./parse-errors.pipe";
     },
     {
       provide: NG_VALIDATORS,
-      useClass: forwardRef(() => TranslationFieldComponent),
+      useExisting: forwardRef(() => TranslationFieldComponent),
       multi: true
     }]
 })
