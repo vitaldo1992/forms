@@ -1,7 +1,7 @@
 import {Pipe, PipeTransform} from "@angular/core";
 import {ValidationErrors} from "@angular/forms";
 
-interface ErrorsDictionary {
+interface PrettyError {
   lang?: string | undefined;
   message?: string;
 }
@@ -12,7 +12,7 @@ interface ErrorsDictionary {
   standalone: true
 })
 export class ParseErrorsPipe implements PipeTransform {
-  transform(errors: ValidationErrors | null): ErrorsDictionary {
+  transform(errors: ValidationErrors | null): PrettyError {
     if (errors) {
       const error = Object.entries(errors)[0];
       if (error) {

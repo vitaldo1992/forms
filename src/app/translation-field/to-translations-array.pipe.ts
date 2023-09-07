@@ -3,6 +3,7 @@ import {TranslationMap, Translations} from "./translation.interface";
 
 @Pipe({
   name: 'toTranslationArray',
+  pure: true,
   standalone: true
 })
 export class ToTranslationsArrayPipe implements PipeTransform {
